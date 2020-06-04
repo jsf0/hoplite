@@ -1,0 +1,181 @@
+.\"
+.\"Copyright (c) 2020 Joseph Fierro <joseph.fierro@logosnetworks.com>
+.\"
+.\"Permission to use, copy, modify, and distribute this software for any
+.\"purpose with or without fee is hereby granted, provided that the above
+.\"copyright notice and this permission notice appear in all copies.
+.\"
+.\"THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\"WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\"MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\"ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\"WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\"ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\"OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.Dd $Mdocdate: June 2 2020 $
+.Dt HOPLITE 1
+.Os
+.Sh NAME
+.Nm hoplite
+.Nd small, fast file encryption and signing utility
+.Sh SYNOPSIS
+.Nm hoplite
+.Fl V
+.Nm hoplite
+.Fl c
+.Op Fl S
+.Op Fl r rounds
+.Op Fl m memory
+.Op Fl t threads
+.Fl f Ar file
+.Nm hoplite
+.Fl e
+.Op Fl S
+.Fl p Ar recip-pubkey
+.Fl k Ar sender-secretkey
+.Fl f Ar file
+.Nm hoplite
+.Fl d
+.Op Fl S
+.Op Fl k Ar recip-secretkey
+.Op Fl p Ar sender-pubkey
+.Fl f Ar file
+.Nm hoplite
+.Fl s 
+.Op Fl S
+.Fl k Ar signer-secret-signing-key
+.Fl f Ar file
+.Nm hoplite
+.Fl v
+.Fl p Ar signer-public-signing-key
+.Fl f Ar file
+.Nm hoplite
+.Fl g
+.Ar key-id
+.Op Fl S
+.Op Fl r rounds
+.Op Fl m memory
+.Op Fl t threads
+.Sh DESCRIPTION
+The
+.Nm
+utility encrypts and decrypts files with either a passphrase-derived
+key or a Curve25519 public/secret key pair, and signs and verifies files
+with Ed25519 key pairs. It relies on TweetNaCL for its encryption and signing
+related functions, and Argon2i for passphrase-based key derivation.
+The following options select the operation:
+.Bl -tag -width Dsssigfile
+.It Fl V
+Print out the version and exit
+.It Fl c 
+Symmetric encryption with a passphrase-derived key.
+.It Fl e 
+Asymmetric encryption with key pair.
+Both the recipient's encryption public key and the sender's encryption secret key are required.
+.It Fl d 
+Decryption. If the file was encrypted with a passphrase-derived key, you will be 
+prompted to enter the passphrase. If a key pair was used, the sender's encryption public key 
+and the recipient's encryption secret key are both required to authenticate and decrypt the data.
+.It Fl s
+Signing. The file will be signed "in place" with the signature appended to it. This 
+requires the signer's secret signing key.
+.It Fl v
+Verify a signed file. The signer's public signing key is required.
+.It Fl g
+Generate a new key pair. This requires the desired key ID that will become part of the file name.
+It will create 2 separate key pairs: a Curve25519 pair for encryption/decryption and an
+Ed25519 pair for signing/verification. 
+.El
+.Pp
+The other options consist of the following:
+.Bl -tag -width Dsssignature
+.It Fl S
+Accept passphrase from stdin rather than directly from a TTY. This
+makes it easier to embed
+.Nm
+in scripts as the passphrase can be piped in, but does potentially
+expose that passphrase to anyone on the machine. In a multi-user environment where
+you do not trust the other users, this option should be avoided.
+.It Fl r
+The number of passes or "rounds" Argon2i will make. The higher the value, the slower the function will be,
+thus increasing the difficulty of password guessing attacks.
+.Pp
+The default and minimum is 3, and the maximum is 1024.
+.It Fl m
+The Argon2i memory parameter. This option takes the desired amount of RAM in MiB for Argon2d to use.
+Higher values will slow down password guessing attacks as well as require attackers to use significant
+amounts of RAM. However, you must have the RAM available on your machine.
+.Pp
+The default is 448, the minimum is 56, and the maximum is 64000.
+.It Fl t
+The number of threads used by Argon2i. Generally this should be double the number of physical cores.
+.Pp
+The default is 4, the minimum is 2, and the maximum is 256.
+.El
+.Pp
+The 
+.Fl n
+option will create key files with the desired key ID prepended to them. For
+example, giving an ID of "alice" will lead to the following files being created in
+the current directory:
+
+alice-encryption-pubkey.curve25519
+
+alice-encryption-secretkey.curve25519
+
+alice-signing-pubkey.ed25519
+
+alice-signing-secretkey.ed25519
+
+These can, of course, be renamed to whatever you want and 
+.Nm
+will use them as usual, but it is important to use only the Curve25519 keys for encryption
+and the only Ed25519 signing keys for signing. Both secret keys will be encrypted upon creation
+and you will be asked for the passphrase whenever they are used.
+Public keys are base64 encoded and can be freely distributed.
+.El
+.Pp
+.Sh EXIT STATUS
+.Ex -std hoplite
+It may fail because of one of the following reasons:
+.Pp
+.Bl -bullet -compact
+.It
+A key or file is required but was not given or was inaccessible. 
+.It
+Passphrase is incorrect.
+.It
+The wrong public and/or secret key was given for decryption or verification. 
+.It
+The file header was corrupt.
+.It
+More RAM was requested of Argon2 than the system can provide.
+.El
+.Sh EXAMPLES
+Alice generates new key pairs using "alice" as her ID:
+.Dl $ hoplite -g alice
+.Pp
+Alice encrypts a file intended for Bob:
+.Dl $ hoplite -e -p bob-encryption-pubkey.curve25519 -k alice-encryption-secretkey.curve25519 -f file.pdf
+.Pp
+Bob decrypts a file sent by Alice:
+.Dl $ hoplite -d -p alice-encryption-pubkey.curve25519 -k bob-encryption-secretkey.curve25519 -f file.pdf.hplt
+.Pp
+Encrypt a file with a passphrase-derived key:
+.Dl $ hoplite -c -f file.pdf
+.Pp
+Encrypt a file with passphrase-derived key, this time specifying 1 GiB of RAM, 4 rounds, and 8 threads:
+.Dl $ hoplite -c -m 1024 -r 4 -t 8 -f file.pdf
+.Pp
+Encrypt a file with a passphrase piped in from stdin:
+.Dl $ echo topsecretp@ssw0rd | hoplite -c -S -f file.pdf
+.Pp
+Decrypt a file with passphrase:
+.Dl $ hoplite -d -f file.pdf.hplt
+.Pp
+Alice signs a file:
+.Dl $ hoplite -s -k alice-signing-secretkey.ed25519 -f file.pdf
+.Pp
+Verify a file signed by Alice:
+.Dl $ hoplite -v -p alice-signing-pubkey.ed25519 -f file.pdf.signed
+.Pp
