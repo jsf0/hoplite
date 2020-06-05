@@ -66,10 +66,6 @@ hoplite_newkey(char *id, long long rounds, long long mem, long long threads)
 	FILE *sign_seckey = NULL;
 	FILE *sign_pubkey = NULL;
 
-	/* Ensure secret key buffers are zeroed before key generation */	
-	explicit_bzero(sk, sizeof(sk));
-	explicit_bzero(sign_sk, sizeof(sign_sk));
-
 	/* Generate keys and place into buffers */
 	if (crypto_box_keypair(pk, sk + ZEROBYTES) == -1)
 		err(1, "Error generating keys");
