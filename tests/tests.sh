@@ -22,7 +22,7 @@ fi
 
 
 # Test asymmetric decryption
-if echo "password" | ./../hoplite -S -d -f file.txt.hplt \
+if echo "password" | ./../hoplite -S -d -f file.txt.enc \
 	-p test-encryption-pubkey.curve25519 \
 	-k test-encryption-secretkey.curve25519 > /dev/null 2>&1; then
 	
@@ -44,7 +44,7 @@ fi
 
 
 # Test symmetric decryption
-if echo "password" | ./../hoplite -S -d -f file.txt.hplt > /dev/null 2>&1; then
+if echo "password" | ./../hoplite -S -d -f file.txt.enc > /dev/null 2>&1; then
 	echo "$test4 PASSED"
 else
 	echo "$test4 FAILED"
@@ -74,7 +74,7 @@ else
 fi
 
 # Clean up
-rm file.txt.hplt
+rm file.txt.enc
 rm file.txt.signed
 
 echo "All tests passed successfully!"

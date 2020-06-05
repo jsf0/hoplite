@@ -1,7 +1,7 @@
 #define	VERSION	"0.1"
 
 #define FILENAME_SIZE   255
-#define EXT     ".hplt"
+#define EXT     ".enc"
 #define SIGNEXT ".signed"
 #define PUB     "-encryption-pubkey.curve25519"
 #define SEC     "-encryption-secretkey.curve25519"
