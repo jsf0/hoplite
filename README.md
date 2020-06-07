@@ -1,8 +1,3 @@
-<a href="https://scan.coverity.com/projects/jsfierro-hoplite">
-  <img alt="Coverity Scan Build Status"
-       src="https://scan.coverity.com/projects/15272/badge.svg"/>
-</a>
-
 *DISCLAIMER: I made every effort to write this securely
 but I can't make any guarantees. Use it at your own risk.
 This is an alpha version. I will probably make changes
@@ -98,7 +93,7 @@ Primitives used
 - Asymmetric key exchange: X25519 key exchange with Curve25519 keys 
 - Symmetric cipher: XSalsa20-Poly1305
 - Password-based key derivation: Argon2i version 1.3
-- Random number generation: arc4random on OpenBSD. /dev/urandom everywhere else
+- Random number generation: arc4random on OpenBSD and macOS. /dev/urandom everywhere else
 
 Limitations
 -----------

@@ -1,7 +1,5 @@
-/* Use arc4random on systems that have a modern implementation.
-   Currently, I'm limiting this to OpenBSD. 
- */
-#ifdef __OpenBSD__
+/* Use arc4random on systems that have a modern implementation.*/
+#if defined(__OpenBSD__) || defined(__APPLE)
 
 #include <err.h>
 #include <stdlib.h>
@@ -29,7 +27,7 @@ static int fd = -1;
 void randombytes(unsigned char *x,unsigned long long xlen)
 {
   int i;
-
+  
   if (fd == -1) {
     for (;;) {
       fd = open("/dev/urandom",O_RDONLY);
