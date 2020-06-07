@@ -89,6 +89,14 @@ Ed25519 pair for signing/verification.
 .Pp
 The other options consist of the following:
 .Bl -tag -width Dsssignature
+.It Fl k
+The path to your secret key. If omitted,
+.Nm
+will look for the HOPLITE_SECKEY or HOPLITE_SIGNING_SECKEY environment
+variable for this secret key, when encrypting or signing respectively.
+.It Fl p
+When encrypting, the recipient's public key. When verifying a signature,
+the signer's public key.
 .It Fl S
 Accept passphrase from stdin rather than directly from a TTY. This
 makes it easier to embed
@@ -114,7 +122,7 @@ The default is 4, the minimum is 2, and the maximum is 256.
 .El
 .Pp
 The 
-.Fl n
+.Fl g
 option will create key files with the desired key ID prepended to them. For
 example, giving an ID of "alice" will lead to the following files being created in
 the current directory:

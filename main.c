@@ -16,6 +16,7 @@
 
 #include <err.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -88,33 +89,33 @@ main(int argc, char **argv)
 		    break;
 		case 'k':
 		    if ((skey = fopen(optarg, "r")) == NULL)
-			err(1, "Couldn't find secret key");
+			err(1, "couldn't open secret key");
 		    break;
 		case 'p':
 		    if ((pkey = fopen(optarg, "r")) == NULL)
-			err(1, "Couldn't find public key");
+			err(1, "couldn't open public key");
 		    break;
 		case 'f':
 		    if ((infile = fopen(optarg, "r")) == NULL)
-			err(1, "Couldn't find file");
+			err(1, "couldn't open file");
 		    if (portable_strlcpy(filename, optarg, FILENAME_SIZE) >= FILENAME_SIZE)
-			errx(1, "Filename too long");
+			errx(1, "filename too long");
 		    break;
 		case 'r':
 		    rounds = strtonum(optarg, MIN_ROUNDS, MAX_ROUNDS, &errstr);
 		    if (errstr != NULL)
-			errx(1, "Error getting rounds: %s", errstr);
+			errx(1, "error getting rounds: %s", errstr);
 		    break;
 		case 'm':
 		    mem = strtonum(optarg, MIN_MEM, MAX_MEM, &errstr);
 		    if (errstr != NULL)
-			errx(1, "Error setting KDF memory: %s", errstr);
+			errx(1, "error setting KDF memory: %s", errstr);
 		    mem = (mem * 1024);
 		    break;
 		case 't':
 		    threads = strtonum(optarg, MIN_THREADS, MAX_THREADS, &errstr);
 		    if (errstr != NULL)
-			errx(1, "Error setting KDF threads: %s", errstr);
+			errx(1, "error setting KDF threads: %s", errstr);
 		    break;
 		default:
 		    usage();
@@ -140,25 +141,27 @@ main(int argc, char **argv)
 
 		/* Asymmetric encryption */
 		if (infile == NULL)
-		    errx(1, "Must provide a file for encryption");
+		    errx(1, "must provide a file for encryption");
 		if (pkey == NULL)
-		    errx(1, "Must provide recipient's public key");
-		if (skey == NULL)
-		    errx(1, "Must provide sender's secret key");
+		    errx(1, "must provide recipient's public key");
+		if (skey == NULL) {
+                    if ((skey = fopen(getenv("HOPLITE_SECKEY"), "r")) == NULL)
+                      errx(1, "no secret key found");
+                }
 		hoplite_encrypt(infile, pkey, skey, filename, 1, 1, 1, 1);
 
 	} else if (flag == 3) {
 
 		/* Symmetric encryption */
 		if (infile == NULL)
-		    errx(1, "Must provide a file for encryption");
+		    errx(1, "must provide a file for encryption");
 		hoplite_encrypt(infile, NULL, NULL, filename, 2, rounds, mem, threads);
 
 	} else if (flag == 4) {
 	
 		/* Decryption */
 		if (infile == NULL)
-		    errx(1, "Must provide a file for decryption");
+		    errx(1, "must provide a file for decryption");
 		hoplite_decrypt(infile, pkey, skey, filename);
 
 	} else if (flag == 5) {
@@ -166,17 +169,19 @@ main(int argc, char **argv)
 		/* Signing */
 		if (infile == NULL)
 		    errx(1, "Must provide a file for signing");	
-		if (skey == NULL)
-		    errx(1, "Must provide signer's secret key");
+		if (skey == NULL) {
+                    if ((skey = fopen(getenv("HOPLITE_SIGNING_SECKEY"), "r")) == NULL)
+                        errx(1, "no secret key found");
+                }
 		hoplite_sign(infile, skey, filename);
 
 	} else if (flag == 6) {
 
 		/* Verifying signed file */
 		if (infile == NULL)
-		    errx(1, "Must provide a file for sig verification");
+		    errx(1, "must provide a file for sig verification");
 		if (pkey == NULL)
-		    errx(1, "Must provide signer's public key");
+		    errx(1, "must provide signer's public key");
 		hoplite_verify(infile, pkey, filename);
 
 	}
