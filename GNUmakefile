@@ -32,7 +32,8 @@ else
         SRC += $(KDF_DIR)/opt.c
 endif
 
-SRC += bsdcompat/explicit_bzero.c bsdcompat/strlcat.c bsdcompat/strlcpy.c
+SRC += bsdcompat/explicit_bzero.c bsdcompat/strlcat.c
+SRC += bsdcompat/timingsafe_bcmp.c bsdcompat/strlcpy.c
 SRC += bsdcompat/strtonum.c bsdcompat/readpassphrase.c
 SRC += crypto/tweetnacl.c crypto/randombytes.c
 SRC += utils/base64.c utils/utils.c
